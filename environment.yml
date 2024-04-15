@@ -22,4 +22,4 @@ dependencies:
   - pip
   - pip:
     - transformers[torch]
-
+    - pillow
