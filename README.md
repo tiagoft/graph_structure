@@ -1,1 +1,3 @@
-# graph_structure
+# Graph structure experiments
+
+Run `setup.sh` to install conda environment.
