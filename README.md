@@ -9,6 +9,11 @@ cd package
 pip install -e .
 ```
 
+Then, in your python script:
+
+```
+import graph_structure as gs
+```
 
 ## Development
 
