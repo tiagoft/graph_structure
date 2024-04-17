@@ -1,3 +1,6 @@
+import numpy as np
+from sklearn.metrics.pairwise import pairwise_distances
+
 def nearest_neighbors(x, self_is_neighbor=False, metric='cosine'):
     D = pairwise_distances(x, x, metric=metric)
     if self_is_neighbor == False:
