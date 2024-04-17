@@ -1,0 +1,19 @@
+[project]
+name = "graph_structure"
+version = "0.0.1"
+authors = [
+  { name="Tiago Tavares", email="tiagoft1@insper.edu.br" },
+  { name="Fabio Ayres", email="fabioja@insper.edu.br"}
+]
+description = "Point Cloud Structural Similarity via Induced Graph Adjacency"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/tiagoft/graph_structure"
+Issues = "https://github.com/tiagoft/graph_structure/issues"
