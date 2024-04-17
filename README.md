@@ -1,3 +1,15 @@
-# Graph structure experiments
+# Point Cloud Structural Similarity via Induced Graph Adjacency 
 
-Run `setup.sh` to install conda environment.
+## Installation
+
+To install the library as a package:
+
+```
+cd package
+pip install -e .
+```
+
+
+## Development
+
+Run `setup.sh` to install the conda environment.
