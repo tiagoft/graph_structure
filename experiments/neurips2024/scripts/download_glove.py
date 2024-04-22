@@ -54,7 +54,7 @@ if not analogy_file_path.is_file():
     total_size_in_bytes = int(response.headers.get("content-length", 0))
     block_size = 1024  # 1 Kibibyte
     progress_bar = tqdm(total=total_size_in_bytes, unit="iB", unit_scale=True)
-    with open(zip_file_path, "wb") as f:
+    with open(analogy_file_path, "wb") as f:
         for data in response.iter_content(block_size):
             progress_bar.update(len(data))
             f.write(data)
