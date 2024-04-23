@@ -24,3 +24,5 @@ dependencies:
     - transformers[torch]
     - pillow
     - python-dotenv
+    - -e ./package/
+
