@@ -9,7 +9,7 @@ def nearest_neighbors(x, self_is_neighbor=False, metric='cosine'):
     return closest
 
 
-def _compute_jaccard_similarity(sx, sy):
+def compute_jaccard_similarity(sx, sy):
     """
     Compute Jaccard similarity between two sets of indices.
     """
@@ -22,7 +22,7 @@ def mean_neighborhood_similarity_from_neighborhood(nx, ny, k):
     for i in range(num_points):
         sx = set(nx[i, 0:k])
         sy = set(ny[i, 0:k])
-        inter += _compute_jaccard_similarity(sx, sy)
+        inter += compute_jaccard_similarity(sx, sy)
     inter /= num_points
     return inter
 
