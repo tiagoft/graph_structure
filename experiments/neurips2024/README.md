@@ -8,4 +8,4 @@ This is the accompanying code for the paper: `Measuring structural similarity be
 * [Theory and toy problems (Section 3)](notebooks/theory_and_toy_problems.ipynb)
 * [GloVe experiments (Section 4.1)](notebooks/glove300.ipynb)
 * [CLIP experiments (Section 4.2)](notebooks/zeroshot_clip.ipynb)
-* [Proof of H(k)](notebooks/hypergeometric_bound.ipynb)
+* [Proof of H(k) (Appendix A)](notebooks/hypergeometric_bound.ipynb)
