@@ -2,8 +2,8 @@ import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.neighbors import kneighbors_graph
 
-def nearest_neighbors(x, k=None, self_is_neighbor=False, metric='minkowski'):
-    G = kneighbors_graph(x, k, mode='connectivity', metric=metric, include_self=self_is_neighbor, n_jobs=-1)
+def nearest_neighbors(x, k=None, self_is_neighbor=False, metric='minkowski', n_jobs=1):
+    G = kneighbors_graph(x, k, mode='connectivity', metric=metric, include_self=self_is_neighbor, n_jobs=n_jobs)
     A = []
     for i in range(G.shape[0]):
         A.append(G.getrow(i).nonzero()[1])
@@ -18,21 +18,21 @@ def compute_jaccard_similarity(sx, sy):
     return len(sx.intersection(sy)) / len(sx.union(sy))
 
 
-def mean_neighborhood_similarity_from_neighborhood(nx, ny, k):
+def mean_neighborhood_similarity_from_neighborhood(nx, ny):
     num_points = nx.shape[0]
     inter = 0
     for i in range(num_points):
-        sx = set(nx[i, 0:k])
-        sy = set(ny[i, 0:k])
+        sx = set(nx[i])
+        sy = set(ny[i])
         inter += compute_jaccard_similarity(sx, sy)
     inter /= num_points
     return inter
 
 
-def mean_neighborhood_similarity_from_points(A, B, k):
+def mean_neighborhood_similarity_from_points(A, B, k, n_jobs=1, metric='minkowski'):
     """
     This is $D_g(A, B, k)$
     """
-    nx = nearest_neighbors(A)
-    ny = nearest_neighbors(B)
-    return mean_neighborhood_similarity_from_neighborhood(nx, ny, k)
+    nx = nearest_neighbors(A, k=k, n_jobs=n_jobs, metric=metric)
+    ny = nearest_neighbors(B, k=k, n_jobs=n_jobs, metric=metric)
+    return mean_neighborhood_similarity_from_neighborhood(nx, ny)
