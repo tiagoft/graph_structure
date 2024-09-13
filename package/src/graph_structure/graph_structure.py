@@ -1,13 +1,15 @@
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.neighbors import kneighbors_graph
 
-def nearest_neighbors(x, self_is_neighbor=False, metric='cosine'):
-    D = pairwise_distances(x, x, metric=metric)
-    if self_is_neighbor == False:
-        np.fill_diagonal(D, np.inf)
-    closest = np.argsort(D, axis=1)
-    return closest
+def nearest_neighbors(x, k=None, self_is_neighbor=False, metric='minkowski'):
+    G = kneighbors_graph(x, k, mode='connectivity', metric=metric, include_self=self_is_neighbor, n_jobs=-1)
+    A = []
+    for i in range(G.shape[0]):
+        A.append(G.getrow(i).nonzero()[1])
 
+    A=np.vstack(A)
+    return A
 
 def compute_jaccard_similarity(sx, sy):
     """
