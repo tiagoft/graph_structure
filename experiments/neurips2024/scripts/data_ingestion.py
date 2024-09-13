@@ -201,6 +201,9 @@ def main():
         'templates': templates,
         'texts': texts,
     }
+
+    print("Saving embeddings to embeds_cifar100.pkl")
+    
     with open('embeds_cifar100.pkl', 'wb') as f:
         pickle.dump(output, f)
 
