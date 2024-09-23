@@ -38,6 +38,14 @@ def mean_neighborhood_similarity_from_points(A, B, k, n_jobs=1, metric='minkowsk
     return mean_neighborhood_similarity_from_neighborhood(nx, ny)
 
 def cka(X1, X2):
+    """
+    CKA with a linear kernel as in:
+    Similarity of Neural Network Representations Revisited,
+    Simon Kornblith, Mohammad Norouzi, Honglak Lee, Geoffrey Hinton
+    Proceedings of the 36th International Conference on Machine Learning,
+    PMLR 97:3519-3529, 2019
+    https://proceedings.mlr.press/v97/kornblith19a.html
+    """
     # Center the data
     X1 = X1 - X1.mean(axis=0)
     X2 = X2 - X2.mean(axis=0)
