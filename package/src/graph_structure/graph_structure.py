@@ -36,3 +36,20 @@ def mean_neighborhood_similarity_from_points(A, B, k, n_jobs=1, metric='minkowsk
     nx = nearest_neighbors(A, k=k, n_jobs=n_jobs, metric=metric)
     ny = nearest_neighbors(B, k=k, n_jobs=n_jobs, metric=metric)
     return mean_neighborhood_similarity_from_neighborhood(nx, ny)
+
+def cka(X1, X2):
+    # Center the data
+    X1 = X1 - X1.mean(axis=0)
+    X2 = X2 - X2.mean(axis=0)
+
+    # Compute the kernel matrices
+    K1 = X1.T @ X1
+    K2 = X2.T @ X2
+
+    # Compute the squared Frobenius norms
+    norm1 = np.linalg.norm(K1, 'fro')
+    norm2 = np.linalg.norm(K2, 'fro')
+
+    # Compute the CKA
+    cka = np.linalg.norm(X2.T @ X1, 'fro')**2 / (norm1 * norm2)
+    return cka
