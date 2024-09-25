@@ -3,6 +3,8 @@ from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.neighbors import kneighbors_graph
 
 def nearest_neighbors(x, k=None, self_is_neighbor=False, metric='minkowski', n_jobs=1):
+    if type(k)==float:
+        k = int(k * x.shape[0])
     G = kneighbors_graph(x, k, mode='connectivity', metric=metric, include_self=self_is_neighbor, n_jobs=n_jobs)
     A = []
     for i in range(G.shape[0]):
@@ -29,15 +31,42 @@ def mean_neighborhood_similarity_from_neighborhood(nx, ny):
     return inter
 
 
-def mean_neighborhood_similarity_from_points(A, B, k, n_jobs=1, metric='minkowski'):
+def mean_neighborhood_similarity_from_points(X, Y, k, n_jobs=1, metric='minkowski'):
     """
-    This is $D_g(A, B, k)$
+    This is $NNGS(X, Y, k)$
     """
-    nx = nearest_neighbors(A, k=k, n_jobs=n_jobs, metric=metric)
-    ny = nearest_neighbors(B, k=k, n_jobs=n_jobs, metric=metric)
+    nx = nearest_neighbors(X, k=k, n_jobs=n_jobs, metric=metric)
+    ny = nearest_neighbors(Y, k=k, n_jobs=n_jobs, metric=metric)
     return mean_neighborhood_similarity_from_neighborhood(nx, ny)
 
-def cka(X, Y):
+
+
+def get_rbf_kernel(sigma):
+    def rbf_kernel(X):
+        return np.exp(-pairwise_distances(X, metric='sqeuclidean')/(2*sigma**2))
+    return rbf_kernel
+
+def estimate_sigma(X, alpha=0.8):
+    """
+    Estimate the sigma parameter for the RBF kernel in the CKA-RBF method.
+    """
+    # Compute the pairwise distances
+    D = pairwise_distances(X, X, metric='sqeuclidean')
+    D = np.sort(D, axis=1)
+    D = D[:, 1:]  # Remove the self-distance
+
+    # Compute the median distance
+    median_distance = np.median(D)
+    sigma = median_distance * alpha
+    return sigma
+
+def get_linear_kernel():
+    def linear_kernel(X):
+        return X @ X.T
+    return linear_kernel
+
+
+def cka(X, Y, kernel_X=get_linear_kernel(), kernel_Y=get_linear_kernel()):
     """
     CKA with a linear kernel as in:
     Similarity of Neural Network Representations Revisited,
@@ -51,13 +80,12 @@ def cka(X, Y):
     Y = Y - Y.mean(axis=0)
 
     # Compute the kernel matrices
-    K1 = X.T @ X
-    K2 = Y.T @ Y
+    K = kernel_X(X)
+    L = kernel_Y(Y)
 
-    # Compute the squared Frobenius norms
-    norm1 = np.linalg.norm(K1, 'fro')
-    norm2 = np.linalg.norm(K2, 'fro')
+    KH = K-np.mean(K, axis=1) # KH
+    LH = L-np.mean(L, axis=1) # LH
 
     # Compute the CKA
-    cka = np.linalg.norm(Y.T @ X, 'fro')**2 / (norm1 * norm2)
+    cka = np.trace(KH @ LH) / np.sqrt(np.trace(KH @ KH) * np.trace(LH @ LH))
     return cka
