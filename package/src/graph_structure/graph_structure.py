@@ -39,7 +39,17 @@ def mean_neighborhood_similarity_from_points(X, Y, k, n_jobs=1, metric='minkowsk
     ny = nearest_neighbors(Y, k=k, n_jobs=n_jobs, metric=metric)
     return mean_neighborhood_similarity_from_neighborhood(nx, ny)
 
+# def get_umap_kernel(sigma):
+#     def umap_kernel(X):
+#         D = pairwise_distances(X, metric='sqeuclidean')
+#         D1 = D - np.min(D, axis=1, keepdims=True)
+#         D1 = D1 / np.mean(D1, axis=1, keepdims=True)
+#         D2 = D - np.min(D, axis=0, keepdims=True)
+#         D2 = D2 / np.mean(D2, axis=0, keepdims=True)
+#         D = np.minimum(D1, D2)
 
+#         return np.exp(-D/(2*sigma**2))
+#     return umap_kernel
 
 def get_rbf_kernel(sigma):
     def rbf_kernel(X):
