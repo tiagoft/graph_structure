@@ -21,5 +21,5 @@ Run `setup.sh` to install the conda environment.
 
 ## Reproducing results
 
-To reproduce `Measuring structural similarity between embedding spaces', use [these notebooks](experiments/neurips2024)
+To reproduce `Measuring structural similarity between embedding spaces', use [these notebooks](experiments/nngs_paper)
 
