@@ -1,21 +1,26 @@
+# pylint: disable=invalid-name, missing-docstring
 import numpy as np
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.neighbors import kneighbors_graph
 
 
-def nearest_neighbors(x,
-                      k=None,
-                      self_is_neighbor=False,
-                      metric='minkowski',
-                      n_jobs=1):
-    if type(k) == float:
+def nearest_neighbors(
+    x,
+    k,
+    self_is_neighbor=False,
+    metric='minkowski',
+    n_jobs=1,
+):
+    if isinstance(k, float):
         k = int(k * x.shape[0])
-    G = kneighbors_graph(x,
-                         k,
-                         mode='connectivity',
-                         metric=metric,
-                         include_self=self_is_neighbor,
-                         n_jobs=n_jobs)
+    G = kneighbors_graph(
+        x,
+        k,
+        mode='connectivity',
+        metric=metric,
+        include_self=self_is_neighbor,
+        n_jobs=n_jobs,
+    )
     A = []
     for i in range(G.shape[0]):
         A.append(G.getrow(i).nonzero()[1])
@@ -42,11 +47,13 @@ def mean_neighborhood_similarity_from_neighborhood(nx, ny):
     return inter
 
 
-def mean_neighborhood_similarity_from_points(X,
-                                             Y,
-                                             k,
-                                             n_jobs=1,
-                                             metric='minkowski'):
+def mean_neighborhood_similarity_from_points(
+    X,
+    Y,
+    k,
+    n_jobs=1,
+    metric='minkowski',
+):
     """
     This is $NNGS(X, Y, k)$
     """
@@ -120,9 +127,9 @@ def cka(X, Y, kernel_X=get_linear_kernel(), kernel_Y=get_linear_kernel()):
     KH = K - np.mean(K, axis=1)  # KH
     LH = L - np.mean(L, axis=1)  # LH
 
-    # Compute the CKA
-    cka = np.trace(KH @ LH) / np.sqrt(np.trace(KH @ KH) * np.trace(LH @ LH))
-    return cka
+    # Compute the CKA value.
+    cka_value = np.trace(KH @ LH) / np.sqrt(np.trace(KH @ KH) * np.trace(LH @ LH))
+    return cka_value
 
 
 def gulp(X, Y, lambda_=1.0, centralize_data=True):
@@ -170,6 +177,7 @@ def gulp(X, Y, lambda_=1.0, centralize_data=True):
     dsquare = term1 + term2 + term3
 
     return dsquare
+
 
 def gulp_sim(*args, **kwargs):
     return -gulp(*args, **kwargs)
