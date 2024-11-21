@@ -7,45 +7,36 @@ from tqdm import tqdm
 from imagenet_labels import IMAGENET_LABELS
 
 import pickle
-# from torch.utils.data import DataLoader
-# from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, Dataset
+from torchvision import datasets, transforms
 from tqdm import tqdm
+from joblib import Parallel, delayed
 from transformers import (AutoProcessor, AutoTokenizer, CLIPModel,
                           CLIPProcessor, CLIPTextModelWithProjection,
                           CLIPVisionModelWithProjection)
 
-# import pickle
 
-# from torchvision import datasets
-# from tqdm import tqdm
-# from transformers import (AutoProcessor, AutoTokenizer,
-#                           CLIPTextModelWithProjection,
-#                           CLIPVisionModelWithProjection)
+class TextDatasetFromList(Dataset):
+    def __init__(self, texts):
+        self.texts = texts
+
+    def __getitem__(self, index):
+        return self.texts[index]
+
+    def __len__(self):
+        return len(self.texts)
+
 
 def main():
-    data_dir = Path('/mnt/data/imagenet')
-
-    # Preprocess data batches
-    all_data = {
-        'labels': [],
-        'data': [],
-    }
-
-    print("Loading data batches")
-    for i in tqdm(range(1, 11)):
-        A = np.load(data_dir / f'train_data_batch_{i}', allow_pickle=True)
-        all_data['data'].append(A['data'])
-        all_data['labels'].append(A['labels'])
-
-    print("Concatenating data batches")
-    all_data['data'] = np.concatenate(all_data['data'], axis=0)
-    all_data['labels'] = np.concatenate(all_data['labels'], axis=0)
-    all_data['data'] = all_data['data'].reshape(-1, 3, 32, 32)
-    all_data['data'] = np.transpose(all_data['data'], (0, 2, 3, 1))
+    data_dir = Path('/mnt/data/imagenet/ilsvrc2012/')
+    print("Loading ImageNet dataset")
+    imagenet_dataset = datasets.ImageNet(
+            root=data_dir,
+            split='val',
+    )
+    print("Loaded ImageNet dataset")
 
     classes = [IMAGENET_LABELS[n] for n in range(1000)]
-
-
 
     templates = [
         'a photo of a {}.',
@@ -73,50 +64,98 @@ def main():
     for c in classes:
         for t in templates:
             texts.append(t.format(c))
-    print(texts)
+    
 
-    print("Loading models")
-    vision_model = CLIPVisionModelWithProjection \
-        .from_pretrained("openai/clip-vit-base-patch32")
-    processor = AutoProcessor \
-        .from_pretrained("openai/clip-vit-base-patch32")
+    print("Loading text models")
     model = CLIPTextModelWithProjection \
-        .from_pretrained("openai/clip-vit-base-patch32")
+        .from_pretrained("openai/clip-vit-base-patch32").cuda()
     tokenizer = AutoTokenizer \
+        .from_pretrained("openai/clip-vit-base-patch32")
+
+
+    print("Getting text embeddings")
+    # Get text embeddings.
+    dataset = TextDatasetFromList(texts)
+    data_loader = DataLoader(dataset, batch_size=64, num_workers=4)
+    all_embeds = []
+    for batch in tqdm(data_loader):
+        inputs = tokenizer(batch, padding=True, return_tensors="pt")
+        inputs = {k: v.cuda() for k, v in inputs.items()}
+        outputs = model(**inputs)
+        text_embeds = outputs.text_embeds.detach().cpu().numpy()
+        all_embeds.append(text_embeds)
+    text_embeds = np.concatenate(all_embeds, axis=0)
+    print(text_embeds.shape, len(texts))
+    # print("Tokenizing")
+    # print(len(texts))
+    # inputs = tokenizer(texts, padding=True, return_tensors="pt")
+    # print("Sending tokens to GPU")
+    # inputs = {k: v.cuda() for k, v in inputs.items()}
+    # print("Getting embeddings")
+    # outputs = model(**inputs)
+    # print("Detaching")
+    # text_embeds = outputs.text_embeds.detach().cpu().numpy()
+
+    print("Saving text embeddings to embeds_texts_imagenet32.pkl")
+    # Save embeddings and y_real to pickle.
+    output = {
+        #'image_embeds': image_embeds,
+        'text_embeds': text_embeds,
+        #'y_real': y_real,
+        'classes': classes,
+        'templates': templates,
+        'texts': texts,
+    }
+
+    del model
+    del tokenizer
+
+    with open('embeds_texts_imagenet32.pkl', 'wb') as f:
+        pickle.dump(output, f)
+
+    del text_embeds
+    del output
+    del templates
+
+
+    print("Loading vision models")
+    vision_model = CLIPVisionModelWithProjection \
+        .from_pretrained("openai/clip-vit-base-patch32").cuda()
+    processor = AutoProcessor \
         .from_pretrained("openai/clip-vit-base-patch32")
 
     # Get vision embeddings.
     image_embeds = []
     y_real = []
 
-    print("Getting vision embeddings")
-    for idx in tqdm(range(len(all_data['data']))):
-        image = all_data['data'][idx]
-        label = all_data['labels'][idx]
+    def get_one_embedding(image, vision_model):
         inputs = processor(images=image, return_tensors="pt")
+        inputs = {k: v.cuda() for k, v in inputs.items()}
         outputs = vision_model(**inputs)
-        image_embeds.append(outputs.image_embeds.detach().numpy())
+        return outputs.image_embeds.detach().cpu().numpy()
+    
+    
+    print("Getting vision embeddings")
+    for image, label in tqdm(imagenet_dataset):
         y_real.append(label)
+        image_embeds.append(get_one_embedding(image, vision_model))
 
-    print("Getting text embeddings")
-    # Get text embeddings.
-    inputs = tokenizer(texts, padding=True, return_tensors="pt")
-    outputs = model(**inputs)
-    text_embeds = outputs.text_embeds.detach().numpy()
+
 
     # Save embeddings and y_real to pickle.
     output = {
         'image_embeds': image_embeds,
-        'text_embeds': text_embeds,
+        #'text_embeds': text_embeds,
         'y_real': y_real,
-        'classes': classes,
-        'templates': templates,
-        'texts': texts,
+        #'classes': classes,
+        #'templates': templates,
+        #'texts': texts,
     }
 
-    print("Saving embeddings to embeds_imagenet32.pkl")
-    
-    with open('embeds_imagenet32.pkl', 'wb') as f:
+
+    print("Saving image embeddings to embeds_images_imagenet32.pkl")
+   
+    with open('embeds_images_imagenet32.pkl', 'wb') as f:
         pickle.dump(output, f)
 
 
